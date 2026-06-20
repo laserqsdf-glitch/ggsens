@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GGSens | 멀티 게임 감도 변환기 및 eDPI 계산기</title>
+    <style>
+        /* 기본 테마 및 레이아웃 (Gamers Dark Mode) */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0 20px 0;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+        }
+
+        /* 카드 스타일 */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        /* 폼 요소 스타일 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        .form-group select, .form-group input {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus, .form-group input:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* 결과 창 스타일 */
+        .result-box {
+            background-color: var(--bg-color);
+            border: 1px dashed var(--accent-color);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .result-box span {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .btn-copy {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* 안내 및 설명 섹션 (애드센스 통과용 고품질 콘텐츠) */
+        .info-section {
+            margin-top: 40px;
+        }
+
+        .info-section h3 {
+            font-size: 1.2rem;
+            margin: 20px 0 10px 0;
+            color: var(--accent-color);
+        }
+
+        .info-section p, .info-section ul {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .info-section ul li {
+            margin-bottom: 5px;
+        }
+
+        .warning-text {
+            color: #ef4444 !important;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 5px;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>GGSens</h1>
+        <p>인기 게임 8종 지원 마우스 감도 변환 유틸리티 및 정밀 거리 계산기</p>
+    </header>
+
+    <div class="card">
+        <h2>🎮 마우스 감도 변환 (물리 거리 동기화)</h2>
+        <div class="grid">
+            <div class="form-group">
+                <label for="fromGame">기존 게임 (기준)</label>
+                <select id="fromGame">
+                    <option value="valorant" selected>발로란트 (Valorant)</option>
+                    <option value="cs2">카운터 스트라이크 2 (CS2)</option>
+                    <option value="pubg">배틀그라운드 (PUBG)</option>
+                    <option value="overwatch">오버워치 2 (Overwatch 2)</option>
+                    <option value="apex">에이펙스 레전드 (Apex Legends)</option>
+                    <option value="cod">콜 오브 듀티 (Call of Duty)</option>
+                    <option value="gta5">GTA V / 온라인</option>
+                    <option value="cyberpunk">사이버펑크 2077</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="inputSens">기존 인게임 감도</label>
+                <input type="number" id="inputSens" value="1.0" step="0.001" min="0">
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="form-group">
+                <label for="toGame">변환할 게임</label>
+                <select id="toGame">
+                    <option value="valorant">발로란트 (Valorant)</option>
+                    <option value="cs2" selected>카운터 스트라이크 2 (CS2)</option>
+                    <option value="pubg">배틀그라운드 (PUBG)</option>
+                    <option value="overwatch">오버워치 2 (Overwatch 2)</option>
+                    <option value="apex">에이펙스 레전드 (Apex Legends)</option>
+                    <option value="cod">콜 오브 듀티 (Call of Duty)</option>
+                    <option value="gta5">GTA V / 온라인</option>
+                    <option value="cyberpunk">사이버펑크 2077</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>변환된 결과 감도</label>
+                <div class="result-box">
+                    <span id="outputSens">3.182</span><br>
+                    <button class="btn-copy" onclick="copyResult()">값 복사하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚡ 게임별 eDPI 및 360° 물리 거리 계산기</h2>
+        <div class="grid">
+            <div class="form-group">
+                <label for="edpiGame">대상 게임 선택</label>
+                <select id="edpiGame">
+                    <option value="valorant" selected>발로란트 (Valorant)</option>
+                    <option value="cs2">카운터 스트라이크 2 (CS2)</option>
+                    <option value="pubg">배틀그라운드 (PUBG)</option>
+                    <option value="overwatch">오버워치 2 (Overwatch 2)</option>
+                    <option value="apex">에이펙스 레전드 (Apex Legends)</option>
+                    <option value="cod">콜 오브 듀티 (Call of Duty)</option>
+                    <option value="gta5">GTA V / 온라인</option>
+                    <option value="cyberpunk">사이버펑크 2077</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edpiDpi">마우스 하드웨어 DPI</label>
+                <input type="number" id="edpiDpi" value="800" step="50" min="0">
+            </div>
+            <div class="form-group">
+                <label for="edpiSens">해당 게임 인게임 감도</label>
+                <input type="number" id="edpiSens" value="0.4" step="0.001" min="0">
+            </div>
+        </div>
+        
+        <div class="grid" style="margin-top: 10px;">
+            <div class="form-group">
+                <label id="edpiResultLabel">단순 연산 eDPI 수치</label>
+                <div class="result-box" style="border-color: #a855f7;">
+                    <span id="outputEdpi" style="color: #a855f7;">320</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>실제 화면 360° 회전 거리</label>
+                <div class="result-box" style="border-color: #10b981;">
+                    <span id="outputCm" style="color: #10b981;">41.3</span> <small style="color: var(--text-muted);">cm</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card info-section">
+        <h2>⚠️ 게이머가 반드시 알아야 할 감도 상식</h2>
+        
+        <h3 class="warning-text">🚨 왜 eDPI 숫자가 같아도 실제 마우스 속도는 다를까요?</h3>
+        <p>개념적으로 eDPI(Effective DPI)는 단순히 <code style="background:#0f172a; padding:2px 6px; border-radius:4px;">마우스 DPI × 인게임 감도</code>를 곱한 명목상 수치입니다. 하지만 **게임 엔진마다 인게임 감도 수치에 곱해지는 고유 배율(Yaw 값)이 완전히 다릅니다.**</p>
+        <p>예를 들어, 똑같이 DPI 800에 감도 1.0을 입력하면 두 게임 모두 eDPI는 800으로 동일하게 계산됩니다. 하지만 실제 마우스 패드 위에서 캐릭터를 한 바퀴(360도) 돌려보면 다음과 같은 엄청난 차이가 발생합니다.</p>
+        <ul>
+            <li><strong>발로란트 (eDPI 800):</strong> 한 바퀴 도는 데 약 <strong>16.5cm</strong> 필요 (매우 빠름)</li>
+            <li><strong>카운터 스트라이크 2 (eDPI 800):</strong> 한 바퀴 도는 데 약 <strong>52.0cm</strong> 필요 (매우 느림)</li>
+        </ul>
+        <p>즉, 게임이 다르면 eDPI 숫자를 똑같이 맞추는 것은 아무런 의미가 없습니다. 서로 다른 게임 간에 완벽히 동일한 '손맛(근육 기억)'을 유지하고 싶다면, 본 사이트 상단의 **[마우스 감도 변환]** 기능을 이용해 실제 360도 회전 거리를 동기화해 주어야 합니다.</p>
+
+        <h3>🔒 개인정보처리방침 (Privacy Policy)</h3>
+        <p>GGSens는 이용자가 입력한 어떠한 감도 데이터나 하드웨어 정보도 서버에 수집 및 저장하지 않습니다. 모든 계산은 브라우저 스크립트를 통해 사용자 PC 내부에서 독립적으로 수행됩니다. 본 웹사이트는 구글 애드센스 광고 게재를 위한 식별 쿠키를 사용할 수 있습니다.</p>
+    </div>
+
+    <footer>
+        <p>© 2026 GGSens. All Rights Reserved. 본 사이트는 게이머들을 위한 순수 유틸리티 정적 페이지입니다.</p>
+    </footer>
+</div>
+
+<script>
+    // 카운터 스트라이크 2 / 에이펙스 레전드(소스 엔진 계열)를 기준점 1.0으로 잡은 변환 계수 테이블
+    const gameFactors = {
+        cs2: 1.0,
+        apex: 1.0,
+        valorant: 0.31428571428,  
+        overwatch: 3.3333333333,   
+        cod: 3.3333333333,         
+        pubg: 43.0,                
+        gta5: 4.5,                 
+        cyberpunk: 1.2             
+    };
+
+    const fromGameSelect = document.getElementById('fromGame');
+    const toGameSelect = document.getElementById('toGame');
+    const inputSens = document.getElementById('inputSens');
+    const outputSens = document.getElementById('outputSens');
+
+    const edpiGameSelect = document.getElementById('edpiGame');
+    const edpiDpi = document.getElementById('edpiDpi');
+    const edpiSens = document.getElementById('edpiSens');
+    const outputEdpi = document.getElementById('outputEdpi');
+    const outputCm = document.getElementById('outputCm');
+    const edpiResultLabel = document.getElementById('edpiResultLabel');
+
+    // 마우스 감도 변환 메인 알고리즘
+    function calculateSensitivity() {
+        const fromGame = fromGameSelect.value;
+        const toGame = toGameSelect.value;
+        const sensValue = parseFloat(inputSens.value);
+
+        if (isNaN(sensValue) || sensValue < 0) {
+            outputSens.innerText = "0.000";
+            return;
+        }
+
+        const baseSens = sensValue / gameFactors[fromGame];
+        const convertedSens = baseSens * gameFactors[toGame];
+        outputSens.innerText = convertedSens.toFixed(3);
+    }
+
+    // eDPI 및 실제 360도 회전 물리 거리(cm) 동시 연산 로직
+    function calculateEdpi() {
+        const game = edpiGameSelect.value;
+        const gameText = edpiGameSelect.options[edpiGameSelect.selectedIndex].text;
+        const dpi = parseFloat(edpiDpi.value);
+        const sens = parseFloat(edpiSens.value);
+
+        edpiResultLabel.innerText = "[" + gameText + "] 명목 eDPI";
+
+        if (isNaN(dpi) || isNaN(sens) || dpi <= 0 || sens <= 0) {
+            outputEdpi.innerText = "0";
+            outputCm.innerText = "0.0";
+            return;
+        }
+
+        // 1. 단순 eDPI 연산 (DPI * 감도)
+        const edpiValue = dpi * sens;
+        outputEdpi.innerText = Math.round(edpiValue);
+
+        // 2. 게임별 고유 엔진 배율을 반영하여 소스엔진(CS2) 기준 실질 eDPI로 환산
+        const realBaseEdpi = edpiValue / gameFactors[game];
+
+        // 3. 실질 eDPI 기반 물리 회전 거리(cm) 도출 (CS2 800 eDPI 기준 약 51.95cm 공식 적용)
+        const cmPer360 = 41560 / realBaseEdpi;
+        
+        outputCm.innerText = cmPer360.toFixed(1);
+    }
+
+    // 클립보드 복사 함수
+    function copyResult() {
+        const valueToCopy = outputSens.innerText;
+        navigator.clipboard.writeText(valueToCopy).then(() => {
+            alert("변환된 감도 수치(" + valueToCopy + ")가 클립보드에 복사되었습니다!");
+        }).catch(err => {
+            alert("복사 실패! 브라우저 권한을 확인하거나 직접 복사해 주세요.");
+        });
+    }
+
+    // 데이터 입력 및 변경 즉시 반영되는 이벤트 리스너
+    fromGameSelect.addEventListener('change', calculateSensitivity);
+    toGameSelect.addEventListener('change', calculateSensitivity);
+    inputSens.addEventListener('input', calculateSensitivity);
+
+    edpiGameSelect.addEventListener('change', calculateEdpi);
+    edpiDpi.addEventListener('input', calculateEdpi);
+    edpiSens.addEventListener('input', calculateEdpi);
+
+    // 웹페이지 로드 시 초기 연산 세팅
+    calculateSensitivity();
+    calculateEdpi();
+</script>
+
+</body>
+</html>
