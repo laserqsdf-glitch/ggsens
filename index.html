@@ -189,7 +189,7 @@
 <div class="container">
     <header>
         <h1>AimBridgetool</h1>
-        <p>인기 게임 8종 지원 마우스 감도 변환 유틸리티 및 정밀 거리 계산기</p>
+        <p>인기 게임 9종 지원 마우스 감도 변환 유틸리티 및 정밀 거리 계산기</p>
     </header>
 
     <div class="card">
@@ -198,9 +198,10 @@
             <div>
                 <div class="input-group">
                     <label for="from-game">기존 게임 (기준)</label>
-                    <select id="from-game" onchange="convertSensitivity()">
+                    <select id="from-game" onchange="updateGameMode('from')">
                         <option value="valorant">발로란트 (Valorant)</option>
                         <option value="cs2" selected>카운터 스트라이크 2 (CS2)</option>
+                        <option value="minecraft">마인크래프트 (Minecraft)</option>
                         <option value="pubg">배틀그라운드 (PUBG)</option>
                         <option value="overwatch">오버워치 2 (Overwatch 2)</option>
                         <option value="apex">에이펙스 레전드 (Apex Legends)</option>
@@ -210,16 +211,17 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label for="from-sens">기존 인게임 감도</label>
+                    <label for="from-sens" id="from-sens-label">기존 인게임 감도</label>
                     <input type="number" id="from-sens" value="1.0" step="0.01" min="0" oninput="convertSensitivity()">
                 </div>
             </div>
             <div>
                 <div class="input-group">
                     <label for="to-game">변환할 게임</label>
-                    <select id="to-game" onchange="convertSensitivity()">
+                    <select id="to-game" onchange="updateGameMode('to')">
                         <option value="valorant" selected>발로란트 (Valorant)</option>
                         <option value="cs2">카운터 스트라이크 2 (CS2)</option>
+                        <option value="minecraft">마인크래프트 (Minecraft)</option>
                         <option value="pubg">배틀그라운드 (PUBG)</option>
                         <option value="overwatch">오버워치 2 (Overwatch 2)</option>
                         <option value="apex">에이펙스 레전드 (Apex Legends)</option>
@@ -245,9 +247,10 @@
             <div>
                 <div class="input-group">
                     <label for="calc-game">대상 게임 선택</label>
-                    <select id="calc-game" onchange="calculateMetrics()">
+                    <select id="calc-game" onchange="updateGameMode('calc')">
                         <option value="valorant">발로란트 (Valorant)</option>
                         <option value="cs2" selected>카운터 스트라이크 2 (CS2)</option>
+                        <option value="minecraft">마인크래프트 (Minecraft)</option>
                         <option value="pubg">배틀그라운드 (PUBG)</option>
                         <option value="overwatch">오버워치 2 (Overwatch 2)</option>
                         <option value="apex">에이펙스 레전드 (Apex Legends)</option>
@@ -261,13 +264,13 @@
                     <input type="number" id="calc-dpi" value="800" step="50" min="1" oninput="calculateMetrics()">
                 </div>
                 <div class="input-group">
-                    <label for="calc-sens">해당 게임 인게임 감도</label>
+                    <label for="calc-sens" id="calc-sens-label">해당 게임 인게임 감도</label>
                     <input type="number" id="calc-sens" value="1.0" step="0.01" min="0" oninput="calculateMetrics()">
                 </div>
             </div>
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
                 <div class="input-group">
-                    <label>단순 연산 eDPI 수치</label>
+                    <label id="edpi-label">단순 연산 eDPI 수치</label>
                     <div class="result-box" style="background: rgba(255,255,255,0.03); border-color: var(--border-color);">
                         <div class="result-val" id="edpi-result" style="color: var(--text-main);">800</div>
                     </div>
@@ -286,10 +289,12 @@
         <h2>⚠️ 게이머가 반드시 알아야 할 감도 상식</h2>
         <h3>🚨 왜 eDPI 숫자가 같아도 실제 마우스 속도는 다를까요?</h3>
         <p>개념적으로 eDPI(Effective DPI)는 단순히 <code>마우스 DPI × 인게임 감도</code>를 곱한 명목상 수치입니다. 하지만 <strong>게임 엔진마다 인게임 감도 수치에 곱해지는 고유 배율(Yaw 값)이 완전히 다릅니다.</strong></p>
-        <p>예를 들어, 똑같이 DPI 800에 감도 1.0을 입력하면 두 게임 모두 eDPI는 800으로 동일하게 계산됩니다. 하지만 실제 마우스 패드 위에서 캐릭터를 한 바퀴(360도) 돌려보면 다음과 같은 엄청난 차이가 발생합니다.</p>
+        <p>특히 <strong>마인크래프트(Minecraft)</strong> 같은 게임은 감도 슬라이더가 직선으로 연산되지 않고 3제곱 곡선을 그리는 특이한 비선형 공식을 사용하기 때문에, 일반적인 일차 곱셈 연산으로는 절대 정확한 변환 값을 구할 수 없습니다.</p>
+        <p>예를 들어, 똑같이 DPI 800에 감도 1.0(마크는 100%)을 입력하면 단순 연산 수치는 비슷해 보일지 몰라도 실제 마우스 패드 위에서 캐릭터를 한 바퀴(360도) 돌려보면 다음과 같은 엄청난 차이가 발생합니다.</p>
         <ul>
             <li><strong>발로란트 (eDPI 800):</strong> 한 바퀴 도는 데 약 <strong>16.5cm</strong> 필요 (매우 빠름)</li>
             <li><strong>카운터 스트라이크 2 (eDPI 800):</strong> 한 바퀴 도는 데 약 <strong>52.0cm</strong> 필요 (매우 느림)</li>
+            <li><strong>마인크래프트 (감도 100%):</strong> 한 바퀴 도는 데 약 <strong>7.6cm</strong> 필요 (초고속 회전)</li>
         </ul>
         <p>즉, 게임이 다르면 eDPI 숫자를 똑같이 맞추는 것은 아무런 의미가 없습니다. 서로 다른 게임 간에 완벽히 동일한 '손맛(근육 기억)'을 유지하고 싶다면, 본 사이트 상단의 <strong>[마우스 감도 변환]</strong> 기능을 이용해 실제 360도 회전 거리를 동기화해 주어야 합니다.</p>
 
@@ -303,7 +308,7 @@
 </div>
 
 <script>
-    // 게임별 고유 인게임 Yaw 값 상수 정의
+    // 게임별 고유 인게임 Yaw 값 상수 정의 (선형 게임용)
     const yawValues = {
         valorant: 0.07,
         cs2: 0.022,
@@ -314,6 +319,38 @@
         gta5: 0.0055,
         cyberpunk: 0.0022
     };
+
+    // 마인크래프트 등 특수 게임 입력을 위한 라벨 및 기본값 편의성 제어
+    function updateGameMode(type) {
+        if (type === 'from') {
+            const game = document.getElementById('from-game').value;
+            const label = document.getElementById('from-sens-label');
+            const input = document.getElementById('from-sens');
+            if (game === 'minecraft') {
+                label.innerText = "기존 인게임 감도 (%)";
+                if (input.value == "1.0" || input.value == "1") input.value = "100";
+            } else {
+                label.innerText = "기존 인게임 감도";
+                if (input.value == "100") input.value = "1.0";
+            }
+        } else if (type === 'calc') {
+            const game = document.getElementById('calc-game').value;
+            const label = document.getElementById('calc-sens-label');
+            const edpiLabel = document.getElementById('edpi-label');
+            const input = document.getElementById('calc-sens');
+            if (game === 'minecraft') {
+                label.innerText = "해당 게임 인게임 감도 (%)";
+                edpiLabel.innerText = "단순 연산 eDPI 수치 (마크는 미지원)";
+                if (input.value == "1.0" || input.value == "1") input.value = "100";
+            } else {
+                label.innerText = "해당 게임 인게임 감도";
+                edpiLabel.innerText = "단순 연산 eDPI 수치";
+                if (input.value == "100") input.value = "1.0";
+            }
+        }
+        convertSensitivity();
+        calculateMetrics();
+    }
 
     // 감도 변환 로직
     function convertSensitivity() {
@@ -326,13 +363,30 @@
             return;
         }
 
-        const fromYaw = yawValues[fromGame];
-        const toYaw = yawValues[toGame];
+        // 1단계: 기준 게임으로부터 targetYaw(도/카운트) 계산
+        let targetYaw;
+        if (fromGame === 'minecraft') {
+            // 마인크래프트 공식: 인게임 %를 바탕으로 실제 회전각 계산
+            const mouseSens = fromSens / 200;
+            const f = mouseSens * 0.6 + 0.2;
+            targetYaw = f * f * f * 1.2;
+        } else {
+            targetYaw = fromSens * yawValues[fromGame];
+        }
 
-        // 물리적 360도 거리를 완벽히 일치시키는 변환 공식
-        const toSens = (fromSens * fromYaw) / toYaw;
-        
-        document.getElementById('calc-result').innerText = toSens.toFixed(3);
+        // 2단계: 대상 게임에 맞게 역산하여 최종 결과 감도 도출
+        let toSens;
+        if (toGame === 'minecraft') {
+            // 마인크래프트 역산 공식 수립 (3제곱근 연산 필요)
+            const cbrtVal = Math.cbrt(targetYaw / 1.2);
+            toSens = 200 * ((cbrtVal - 0.2) / 0.6);
+            if (toSens < 0) toSens = 0;
+            
+            document.getElementById('calc-result').innerText = toSens.toFixed(1) + '%';
+        } else {
+            toSens = targetYaw / yawValues[toGame];
+            document.getElementById('calc-result').innerText = toSens.toFixed(3);
+        }
     }
 
     // eDPI 및 360도 회전 물리 거리 계산 로직
@@ -349,9 +403,18 @@
             return;
         }
 
-        const yaw = yawValues[game];
-        // 360도 회전 거리(cm) 공식 = (360 / (DPI * 감도 * Yaw)) * 2.54 (인치를 cm로 변환)
-        const distanceInCm = (360 / (dpi * sens * yaw)) * 2.54;
+        // 전체 누적 Yaw 값 산출
+        let totalYaw;
+        if (game === 'minecraft') {
+            const mouseSens = sens / 200;
+            const f = mouseSens * 0.6 + 0.2;
+            totalYaw = f * f * f * 1.2;
+        } else {
+            totalYaw = sens * yawValues[game];
+        }
+
+        // 360도 회전 거리(cm) 공식 = (360 / (DPI * 누적Yaw)) * 2.54
+        const distanceInCm = (360 / (dpi * totalYaw)) * 2.54;
 
         document.getElementById('distance-result').innerText = distanceInCm.toFixed(1) + ' cm';
     }
@@ -372,9 +435,5 @@
         calculateMetrics();
     };
 </script>
-</body>
-</html>
-</script>
-
 </body>
 </html>
