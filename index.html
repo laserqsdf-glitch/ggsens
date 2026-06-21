@@ -129,6 +129,11 @@
             padding: 15px;
             text-align: center;
             margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 85px;
         }
 
         .result-val {
@@ -279,14 +284,14 @@
             <div style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
                 <div class="input-group">
                     <label id="edpi-label">단순 연산 eDPI 수치</label>
-                    <div class="result-box" style="background: rgba(255,255,255,0.03); border-color: var(--border-color);">
-                        <div class="result-val" id="edpi-result" style="color: var(--text-main);">800</div>
+                    <div class="result-box" style="background: rgba(255,255,255,0.03); border-color: var(--border-color); min-height: auto; padding: 10px;">
+                        <div class="result-val" id="edpi-result" style="color: var(--text-main); margin-bottom: 0;">800</div>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>실제 화면 360° 회전 거리</label>
-                    <div class="result-box">
-                        <div class="result-val" id="distance-result">52.0 cm</div>
+                    <div class="result-box" style="min-height: auto; padding: 10px;">
+                        <div class="result-val" id="distance-result" style="margin-bottom: 0;">52.0 cm</div>
                     </div>
                 </div>
             </div>
@@ -334,26 +339,28 @@
             const game = document.getElementById('from-game').value;
             const label = document.getElementById('from-sens-label');
             const input = document.getElementById('from-sens');
+            
             if (game === 'minecraft') {
                 label.innerText = "기존 인게임 감도 (%)";
-                if (input.value == "1.0" || input.value == "1") input.value = "100";
+                if (parseFloat(input.value) < 10) input.value = "100";
             } else {
                 label.innerText = "기존 인게임 감도";
-                if (input.value == "100") input.value = "1.0";
+                if (parseFloat(input.value) >= 10) input.value = "1.0";
             }
         } else if (type === 'calc') {
             const game = document.getElementById('calc-game').value;
             const label = document.getElementById('calc-sens-label');
             const edpiLabel = document.getElementById('edpi-label');
             const input = document.getElementById('calc-sens');
+            
             if (game === 'minecraft') {
                 label.innerText = "해당 게임 인게임 감도 (%)";
                 edpiLabel.innerText = "단순 연산 eDPI 수치 (마크는 미지원)";
-                if (input.value == "1.0" || input.value == "1") input.value = "100";
+                if (parseFloat(input.value) < 10) input.value = "100";
             } else {
                 label.innerText = "해당 게임 인게임 감도";
                 edpiLabel.innerText = "단순 연산 eDPI 수치";
-                if (input.value == "100") input.value = "1.0";
+                if (parseFloat(input.value) >= 10) input.value = "1.0";
             }
         }
         convertSensitivity();
@@ -374,7 +381,7 @@
         // 1단계: 기준 게임으로부터 targetYaw(도/카운트) 계산
         let targetYaw;
         if (fromGame === 'minecraft') {
-            // 마인크래프트 공식: 인게임 %를 바탕으로 실제 회전각 계산
+            // 마인크래프트 공식 복구: 200 기준이 맞음
             const mouseSens = fromSens / 200;
             const f = mouseSens * 0.6 + 0.2;
             targetYaw = f * f * f * 1.2;
@@ -385,7 +392,6 @@
         // 2단계: 대상 게임에 맞게 역산하여 최종 결과 감도 도출
         let toSens;
         if (toGame === 'minecraft') {
-            // 마인크래프트 역산 공식 수립 (3제곱근 연산 필요)
             const cbrtVal = Math.cbrt(targetYaw / 1.2);
             toSens = 200 * ((cbrtVal - 0.2) / 0.6);
             if (toSens < 0) toSens = 0;
@@ -402,9 +408,17 @@
         const game = document.getElementById('calc-game').value;
         const dpi = parseFloat(document.getElementById('calc-dpi').value) || 0;
         const sens = parseFloat(document.getElementById('calc-sens').value) || 0;
+        const edpiResultEl = document.getElementById('edpi-result');
 
-        const edpi = dpi * sens;
-        document.getElementById('edpi-result').innerText = sens > 0 && dpi > 0 ? Math.round(edpi) : '0';
+        // 마인크래프트는 eDPI 계산이 무의미하므로 예외 처리
+        if (game === 'minecraft') {
+            edpiResultEl.innerText = '미지원(N/A)';
+            edpiResultEl.style.fontSize = '1.4rem';
+        } else {
+            const edpi = dpi * sens;
+            edpiResultEl.innerText = sens > 0 && dpi > 0 ? Math.round(edpi) : '0';
+            edpiResultEl.style.fontSize = '1.8rem';
+        }
 
         if (dpi <= 0 || sens <= 0) {
             document.getElementById('distance-result').innerText = '0.0 cm';
@@ -414,6 +428,7 @@
         // 전체 누적 Yaw 값 산출
         let totalYaw;
         if (game === 'minecraft') {
+            // 마인크래프트 공식 복구: 200 기준이 맞음
             const mouseSens = sens / 200;
             const f = mouseSens * 0.6 + 0.2;
             totalYaw = f * f * f * 1.2;
@@ -430,17 +445,30 @@
     // 결과값 클립보드 복사 함수
     function copyResult() {
         const resultText = document.getElementById('calc-result').innerText;
-        navigator.clipboard.writeText(resultText).then(() => {
-            alert('감도 값이 클립보드에 복사되었습니다: ' + resultText);
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = resultText;
-            document.body.appendChild(textarea);
-            textarea.select();
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert('감도 값이 클립보드에 복사되었습니다: ' + resultText);
+            }).catch(() => {
+                fallbackCopy(resultText);
+            });
+        } else {
+            fallbackCopy(resultText);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
             document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert('감도 값이 클립보드에 복사되었습니다: ' + resultText);
-        });
+            alert('감도 값이 클립보드에 복사되었습니다: ' + text);
+        } catch (err) {
+            alert('클립보드 복사에 실패했습니다.');
+        }
+        document.body.removeChild(textarea);
     }
 
     // 초기 실행
