@@ -133,7 +133,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 85px;
+            min-height: auto; /* 수정: 고정 min-height 제거로 레이아웃 깨짐 방지 */
         }
 
         .result-val {
@@ -246,7 +246,7 @@
                 <div class="input-group">
                     <label>변환된 결과 감도</label>
                     <div class="result-box">
-                        <div class="result-val" id="calc-result">0.314</div>
+                        <div class="result-val" id="calc-result">-</div>
                         <button class="btn-copy" aria-label="변환 감도 복사" onclick="copyResult()">값 복사하기</button>
                     </div>
                 </div>
@@ -326,12 +326,22 @@
         valorant: 0.07,
         cs2: 0.022,
         apex: 0.022,
-        cod: 0.022,
+        cod: 0.0066,       // 수정: 0.022 -> 0.0066 (Warzone/MW 기준)
         overwatch: 0.0066,
-        pubg: 0.002211,
-        gta5: 0.0055,
-        cyberpunk: 0.0022
+        pubg: 0.002222,    // 수정: 0.002211 -> 0.002222 (1/450)
+        gta5: 0.022,       // 수정: 0.0055 -> 0.022
+        cyberpunk: 0.0066  // 수정: 0.0022 -> 0.0066
     };
+
+    // Yaw 값 계산 통합 함수 (중복 코드 제거 및 유지보수성 향상)
+    function getYaw(game, sens) {
+        if (game === 'minecraft') {
+            const mouseSens = sens / 200;
+            const f = mouseSens * 0.6 + 0.2;
+            return f * f * f * 1.2;
+        }
+        return sens * (yawValues[game] || 0);
+    }
 
     // 마인크래프트 등 특수 게임 입력을 위한 라벨 및 기본값 편의성 제어
     function updateGameMode(type) {
@@ -342,10 +352,10 @@
             
             if (game === 'minecraft') {
                 label.innerText = "기존 인게임 감도 (%)";
-                if (parseFloat(input.value) < 10) input.value = "100";
+                if (parseFloat(input.value) <= 0) input.value = "100"; // 수정: < 10 -> <= 0
             } else {
                 label.innerText = "기존 인게임 감도";
-                if (parseFloat(input.value) >= 10) input.value = "1.0";
+                if (parseFloat(input.value) < 0) input.value = "1.0";
             }
         } else if (type === 'calc') {
             const game = document.getElementById('calc-game').value;
@@ -356,11 +366,11 @@
             if (game === 'minecraft') {
                 label.innerText = "해당 게임 인게임 감도 (%)";
                 edpiLabel.innerText = "단순 연산 eDPI 수치 (마크는 미지원)";
-                if (parseFloat(input.value) < 10) input.value = "100";
+                if (parseFloat(input.value) <= 0) input.value = "100"; // 수정: < 10 -> <= 0
             } else {
                 label.innerText = "해당 게임 인게임 감도";
                 edpiLabel.innerText = "단순 연산 eDPI 수치";
-                if (parseFloat(input.value) >= 10) input.value = "1.0";
+                if (parseFloat(input.value) < 0) input.value = "1.0";
             }
         }
         convertSensitivity();
@@ -371,7 +381,8 @@
     function convertSensitivity() {
         const fromGame = document.getElementById('from-game').value;
         const toGame = document.getElementById('to-game').value;
-        const fromSens = parseFloat(document.getElementById('from-sens').value) || 0;
+        // 수정: 음수 입력 방지 및 NaN 처리
+        const fromSens = Math.max(0, parseFloat(document.getElementById('from-sens').value) || 0); 
         
         if (fromSens <= 0) {
             document.getElementById('calc-result').innerText = '0.000';
@@ -379,15 +390,7 @@
         }
 
         // 1단계: 기준 게임으로부터 targetYaw(도/카운트) 계산
-        let targetYaw;
-        if (fromGame === 'minecraft') {
-            // 마인크래프트 공식 복구: 200 기준이 맞음
-            const mouseSens = fromSens / 200;
-            const f = mouseSens * 0.6 + 0.2;
-            targetYaw = f * f * f * 1.2;
-        } else {
-            targetYaw = fromSens * yawValues[fromGame];
-        }
+        const targetYaw = getYaw(fromGame, fromSens);
 
         // 2단계: 대상 게임에 맞게 역산하여 최종 결과 감도 도출
         let toSens;
@@ -398,7 +401,7 @@
             
             document.getElementById('calc-result').innerText = toSens.toFixed(1) + '%';
         } else {
-            toSens = targetYaw / yawValues[toGame];
+            toSens = targetYaw / (yawValues[toGame] || 0.022);
             document.getElementById('calc-result').innerText = toSens.toFixed(3);
         }
     }
@@ -406,8 +409,9 @@
     // eDPI 및 360도 회전 물리 거리 계산 로직
     function calculateMetrics() {
         const game = document.getElementById('calc-game').value;
-        const dpi = parseFloat(document.getElementById('calc-dpi').value) || 0;
-        const sens = parseFloat(document.getElementById('calc-sens').value) || 0;
+        // 수정: 음수 입력 방지
+        const dpi = Math.max(0, parseFloat(document.getElementById('calc-dpi').value) || 0);
+        const sens = Math.max(0, parseFloat(document.getElementById('calc-sens').value) || 0);
         const edpiResultEl = document.getElementById('edpi-result');
 
         // 마인크래프트는 eDPI 계산이 무의미하므로 예외 처리
@@ -416,7 +420,8 @@
             edpiResultEl.style.fontSize = '1.4rem';
         } else {
             const edpi = dpi * sens;
-            edpiResultEl.innerText = sens > 0 && dpi > 0 ? Math.round(edpi) : '0';
+            // 수정: Math.round 대신 소수점 첫째 자리까지 표시하여 정밀도 향상
+            edpiResultEl.innerText = sens > 0 && dpi > 0 ? edpi.toFixed(1) : '0'; 
             edpiResultEl.style.fontSize = '1.8rem';
         }
 
@@ -426,15 +431,7 @@
         }
 
         // 전체 누적 Yaw 값 산출
-        let totalYaw;
-        if (game === 'minecraft') {
-            // 마인크래프트 공식 복구: 200 기준이 맞음
-            const mouseSens = sens / 200;
-            const f = mouseSens * 0.6 + 0.2;
-            totalYaw = f * f * f * 1.2;
-        } else {
-            totalYaw = sens * yawValues[game];
-        }
+        const totalYaw = getYaw(game, sens);
 
         // 360도 회전 거리(cm) 공식 = (360 / (DPI * 누적Yaw)) * 2.54
         const distanceInCm = (360 / (dpi * totalYaw)) * 2.54;
@@ -445,37 +442,49 @@
     // 결과값 클립보드 복사 함수
     function copyResult() {
         const resultText = document.getElementById('calc-result').innerText;
+        const btn = document.querySelector('.btn-copy');
         
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(resultText).then(() => {
-                alert('감도 값이 클립보드에 복사되었습니다: ' + resultText);
+                showCopyFeedback(btn);
             }).catch(() => {
-                fallbackCopy(resultText);
+                fallbackCopy(resultText, btn);
             });
         } else {
-            fallbackCopy(resultText);
+            fallbackCopy(resultText, btn);
         }
     }
 
-    function fallbackCopy(text) {
+    function fallbackCopy(text, btn) {
         const textarea = document.createElement('textarea');
         textarea.value = text;
         document.body.appendChild(textarea);
         textarea.select();
         try {
             document.execCommand('copy');
-            alert('감도 값이 클립보드에 복사되었습니다: ' + text);
+            showCopyFeedback(btn);
         } catch (err) {
             alert('클립보드 복사에 실패했습니다.');
         }
         document.body.removeChild(textarea);
     }
 
-    // 초기 실행
-    window.onload = function() {
+    // 수정: alert 대신 버튼 텍스트 변경으로 UX 개선
+    function showCopyFeedback(btn) {
+        const originalText = btn.innerText;
+        btn.innerText = '복사됨!';
+        btn.style.opacity = '0.7';
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.opacity = '1';
+        }, 1500);
+    }
+
+    // 수정: window.onload 대신 DOMContentLoaded 사용 (더 빠르고 안전함)
+    document.addEventListener('DOMContentLoaded', function() {
         convertSensitivity();
         calculateMetrics();
-    };
+    });
 </script>
 </body>
 </html>
