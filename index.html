@@ -3,251 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AimBridgetool | 멀티 게임 감도 변환기 및 360° 거리 계산기</title>
-
-    <meta name="description" content="게임 감도 변환기, eDPI 계산기, 360도 회전 거리(cm/360) 계산기">
-    <meta name="keywords" content="감도 변환기,eDPI,cm360,Valorant,CS2,Minecraft,PUBG,Apex">
-    <meta name="robots" content="index,follow">
-    <meta property="og:title" content="AimBridgetool">
-    <meta property="og:description" content="멀티 게임 감도 변환기 및 360도 거리 계산기">
-    <meta property="og:type" content="website">
-
+    <title>AimBridgetool | 멀티 게임 감도 변환기</title>
     <style>
-        :root {
-            --bg-color: #0f1115;
-            --card-bg: #161920;
-            --accent-color: #4facfe;
-            --accent-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border-color: #262c3a;
-        }
+        :root{--bg:#050914;--ac:#00f2fe;--tx:#fff;--bd:rgba(255,255,255,0.15)}
+        *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif}
+        body{background:var(--bg);color:var(--tx);padding:40px 20px;overflow-x:hidden}
+        
+        .goo-bg{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;filter:url('#goo');opacity:0.8}
+        .blob{position:absolute;border-radius:50%;transform:translate(-50%,-50%);transition:left 0.15s ease-out, top 0.15s ease-out;background:var(--ac)}
+        .b1{width:35vw;height:35vw;background:linear-gradient(45deg,#00f2fe,#4facfe);z-index:2}
+        .b2{width:30vw;height:30vw;left:65%;top:60%;animation:float 5s infinite alternate}
+        .b3{width:25vw;height:25vw;left:35%;top:40%;background:#4facfe;animation:float 7s infinite alternate-reverse}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        @keyframes float { 0%{transform:translate(-50%,-50%) scale(1)} 100%{transform:translate(-50%,-80px) scale(1.3)} }
+        
+        @keyframes jelly {
+            0%,100%{transform:scale(1)}
+            25%{transform:scale(1.25,0.75)}
+            50%{transform:scale(0.75,1.25)}
+            75%{transform:scale(1.1,0.9)}
         }
+        .react{animation:jelly 0.5s cubic-bezier(0.25,1,0.5,1); display:inline-block}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            padding: 40px 20px;
-        }
+        .c{max-width:800px;margin:0 auto;position:relative;z-index:1}
+        header{text-align:center;margin-bottom:40px}
+        h1{font-size:2.2rem;color:var(--ac);margin-bottom:10px}
+        
+        .card{background:rgba(10,15,30,0.6);border-radius:24px;padding:30px;margin-bottom:30px;backdrop-filter:blur(20px);border:1px solid var(--bd)}
+        .card h2{font-size:1.3rem;margin-bottom:20px;color:#4facfe}
+        .g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media(max-width:600px){.g2{grid-template-columns:1fr}}
+        
+        .ig label{display:block;font-size:0.9rem;margin:10px 0 5px;opacity:0.8;padding-left:10px}
+        
+        .input-wrap{display:flex;gap:5px;}
+        select, input {width:100%;padding:15px;background:rgba(255,255,255,0.05);border:1px solid var(--bd);border-radius:12px;color:var(--tx);outline:none;font-size:1rem;appearance:none;text-align:center;transition:0.2s;cursor:pointer}
+        select:focus, input:focus {background:rgba(0,242,254,0.15);border-color:var(--ac);box-shadow:0 0 15px rgba(0,242,254,0.4)}
+        option {background:var(--bg);color:var(--tx)}
+        
+        .step-btn{background:rgba(255,255,255,0.1);border:1px solid var(--bd);color:#fff;padding:0 15px;border-radius:12px;cursor:pointer;font-weight:bold;transition:0.2s;}
+        .step-btn:hover{background:var(--ac);color:#000;}
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .rb{padding:25px 15px;text-align:center;margin-top:10px;background:rgba(0,242,254,0.1);border:1px solid var(--ac);border-radius:12px}
+        .rv{font-size:1.6rem;font-weight:bold;color:#00f2fe;transform-origin:center}
+        .btn{color:#fff;font-weight:bold;cursor:pointer;padding:12px 25px;margin-top:10px;background:linear-gradient(45deg,#00f2fe,#4facfe);border:none;border-radius:8px;transition:0.2s}
+        .btn:hover{transform:scale(1.05)}
+        .btn:active{transform:scale(0.95)}
 
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-        }
-
-        header p {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .card h2 {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .input-group select, .input-group input {
-            width: 100%;
-            padding: 12px 16px;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-
-        .input-group select:focus, .input-group input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
-        }
-
-        .result-box {
-            background: rgba(79, 172, 254, 0.1);
-            border: 1px dashed var(--accent-color);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            margin-top: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: auto; /* 수정: 고정 min-height 제거로 레이아웃 깨짐 방지 */
-        }
-
-        .result-val {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #00f2fe;
-            margin-bottom: 5px;
-        }
-
-        .btn-copy {
-            background: var(--accent-gradient);
-            color: #000;
-            font-weight: 600;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            margin-top: 5px;
-            transition: opacity 0.2s;
-        }
-
-        .btn-copy:hover {
-            opacity: 0.9;
-        }
-
-        .info-section {
-            background-color: transparent;
-            border: none;
-            padding: 10px 5px;
-        }
-
-        .info-section h3 {
-            font-size: 1.1rem;
-            margin-top: 20px;
-            margin-bottom: 8px;
-            color: var(--accent-color);
-        }
-
-        .info-section p, .info-section ul {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 12px;
-        }
-
-        .info-section ul {
-            padding-left: 20px;
-        }
-
-        .info-section li {
-            margin-bottom: 6px;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 5px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
+        .compare-table{width:100%;margin-top:15px;border-collapse:collapse;text-align:center;font-size:0.95rem;}
+        .compare-table th, .compare-table td{padding:12px;border-bottom:1px solid var(--bd);}
+        .compare-table th{color:var(--ac);font-weight:600;}
+        .compare-table tr:hover{background:rgba(255,255,255,0.03);}
+        
+        .desc-text{font-size:0.75rem;opacity:0.6;margin-top:4px;}
     </style>
 </head>
 <body>
 
-<div class="container">
+<svg style="position:fixed;width:0;height:0;"><defs><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="25" result="blur"/><feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -10" result="goo"/><feBlend in="SourceGraphic" in2="goo"/></filter></defs></svg>
+<div class="goo-bg"><div class="blob b1" id="cb"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<div class="c">
     <header>
-        <h1>AimBridgetool</h1>
-        <p>인기 게임 9종 지원 마우스 감도 변환 유틸리티 및 정밀 거리 계산기</p>
+        <h1>AimBridgetool</h1><p>실용적 기능과 유동형 UI를 갖춘 감도 변환기</p>
     </header>
 
     <div class="card">
-        <h2>🎮 마우스 감도 변환 (물리 거리 동기화)</h2>
-        <div class="grid-2">
+        <h2>🎮 마우스 감도 변환</h2>
+        <div class="g2">
             <div>
-                <div class="input-group">
-                    <label for="from-game">기존 게임 (기준)</label>
-                    <select id="from-game" onchange="updateGameMode('from')">
-                        <option value="valorant">발로란트 (Valorant)</option>
-                        <option value="cs2" selected>카운터 스트라이크 2 (CS2)</option>
-                        <option value="minecraft">마인크래프트 (Minecraft)</option>
-                        <option value="pubg">배틀그라운드 (PUBG)</option>
-                        <option value="overwatch">오버워치 2 (Overwatch 2)</option>
-                        <option value="apex">에이펙스 레전드 (Apex Legends)</option>
-                        <option value="cod">콜 오브 듀티 (Call of Duty)</option>
-                        <option value="gta5">GTA V / 온라인</option>
-                        <option value="cyberpunk">사이버펑크 2077</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="from-sens" id="from-sens-label">기존 인게임 감도</label>
-                    <input type="number" id="from-sens" value="1.0" step="0.01" min="0" oninput="convertSensitivity()">
+                <div class="ig"><label>기존 게임</label><select id="f-game" onchange="upd('f')"><option value="valorant">발로란트</option><option value="cs2" selected>CS2</option><option value="minecraft">마인크래프트</option><option value="pubg">배틀그라운드</option><option value="overwatch">오버워치 2</option><option value="apex">에이펙스 레전드</option><option value="cod">콜 오브 듀티</option></select></div>
+                <div class="ig">
+                    <label id="f-lbl">기존 감도</label>
+                    <div class="input-wrap">
+                        <button class="step-btn" onclick="stepVal(-1)">-</button>
+                        <input type="number" id="f-sens" value="1.0" step="0.01" oninput="cAll()">
+                        <button class="step-btn" onclick="stepVal(1)">+</button>
+                    </div>
                 </div>
             </div>
             <div>
-                <div class="input-group">
-                    <label for="to-game">변환할 게임</label>
-                    <select id="to-game" onchange="updateGameMode('to')">
-                        <option value="valorant" selected>발로란트 (Valorant)</option>
-                        <option value="cs2">카운터 스트라이크 2 (CS2)</option>
-                        <option value="minecraft">마인크래프트 (Minecraft)</option>
-                        <option value="pubg">배틀그라운드 (PUBG)</option>
-                        <option value="overwatch">오버워치 2 (Overwatch 2)</option>
-                        <option value="apex">에이펙스 레전드 (Apex Legends)</option>
-                        <option value="cod">콜 오브 듀티 (Call of Duty)</option>
-                        <option value="gta5">GTA V / 온라인</option>
-                        <option value="cyberpunk">사이버펑크 2077</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>변환된 결과 감도</label>
-                    <div class="result-box">
-                        <div class="result-val" id="calc-result">-</div>
-                        <button class="btn-copy" aria-label="변환 감도 복사" onclick="copyResult()">값 복사하기</button>
+                <div class="ig"><label>변환할 게임</label><select id="t-game" onchange="upd('t')"><option value="valorant" selected>발로란트</option><option value="cs2">CS2</option><option value="minecraft">마인크래프트</option><option value="pubg">배틀그라운드</option><option value="overwatch">오버워치 2</option><option value="apex">에이펙스 레전드</option><option value="cod">콜 오브 듀티</option></select></div>
+                <div class="ig"><label>변환된 감도</label><div class="rb"><div class="rv" id="c-res">-</div><br><button class="btn" onclick="copy()">값 복사</button></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚡ 360° 회전 거리 계산</h2>
+        <div class="g2">
+            <div>
+                <div class="ig"><label>대상 게임</label><select id="c-game" onchange="upd('c')"><option value="valorant">발로란트</option><option value="cs2" selected>CS2</option><option value="minecraft">마인크래프트</option><option value="pubg">배틀그라운드</option><option value="overwatch">오버워치 2</option><option value="apex">에이펙스 레전드</option><option value="cod">콜 오브 듀티</option></select></div>
+                <div class="ig"><label>마우스 DPI</label><input type="number" id="c-dpi" value="800" step="50" oninput="cAll()"></div>
+                <div class="ig"><label id="c-lbl">해당 감도</label><input type="number" id="c-sens" value="1.0" step="0.01" oninput="cAll()"></div>
+            </div>
+            <div>
+                <div class="ig"><label id="e-lbl">eDPI</label><div class="rb"><div class="rv" id="e-res" style="color:var(--tx)">800</div></div></div>
+                <div class="ig">
+                    <label>360° 회전 거리</label>
+                    <div class="rb">
+                        <div class="rv" id="d-res">52.0 cm</div>
+                        <div class="desc-text">(거리가 짧을수록 감도가 빠른 것)</div>
                     </div>
                 </div>
             </div>
@@ -255,236 +111,113 @@
     </div>
 
     <div class="card">
-        <h2>⚡ 게임별 eDPI 및 360° 물리 거리 계산기</h2>
-        <div class="grid-2">
-            <div>
-                <div class="input-group">
-                    <label for="calc-game">대상 게임 선택</label>
-                    <select id="calc-game" onchange="updateGameMode('calc')">
-                        <option value="valorant">발로란트 (Valorant)</option>
-                        <option value="cs2" selected>카운터 스트라이크 2 (CS2)</option>
-                        <option value="minecraft">마인크래프트 (Minecraft)</option>
-                        <option value="pubg">배틀그라운드 (PUBG)</option>
-                        <option value="overwatch">오버워치 2 (Overwatch 2)</option>
-                        <option value="apex">에이펙스 레전드 (Apex Legends)</option>
-                        <option value="cod">콜 오브 듀티 (Call of Duty)</option>
-                        <option value="gta5">GTA V / 온라인</option>
-                        <option value="cyberpunk">사이버펑크 2077</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="calc-dpi">마우스 하드웨어 DPI</label>
-                    <input type="number" id="calc-dpi" value="800" step="50" min="1" oninput="calculateMetrics()">
-                </div>
-                <div class="input-group">
-                    <label for="calc-sens" id="calc-sens-label">해당 게임 인게임 감도</label>
-                    <input type="number" id="calc-sens" value="1.0" step="0.01" min="0" oninput="calculateMetrics()">
-                </div>
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: center; gap: 15px;">
-                <div class="input-group">
-                    <label id="edpi-label">단순 연산 eDPI 수치</label>
-                    <div class="result-box" style="background: rgba(255,255,255,0.03); border-color: var(--border-color); min-height: auto; padding: 10px;">
-                        <div class="result-val" id="edpi-result" style="color: var(--text-main); margin-bottom: 0;">800</div>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>실제 화면 360° 회전 거리</label>
-                    <div class="result-box" style="min-height: auto; padding: 10px;">
-                        <div class="result-val" id="distance-result" style="margin-bottom: 0;">52.0 cm</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <h2>📊 내 감도 기준 전체 게임 한눈에 비교</h2>
+        <table class="compare-table">
+            <thead>
+                <tr><th>게임명</th><th>환산 감도</th><th>360° 회전 거리</th></tr>
+            </thead>
+            <tbody id="compareBody"></tbody>
+        </table>
     </div>
-
-    <div class="card info-section">
-        <h2>⚠️ 게이머가 반드시 알아야 할 감도 상식</h2>
-        <h3>🚨 왜 eDPI 숫자가 같아도 실제 마우스 속도는 다를까요?</h3>
-        <p>개념적으로 eDPI(Effective DPI)는 단순히 <code>마우스 DPI × 인게임 감도</code>를 곱한 명목상 수치입니다. 하지만 <strong>게임 엔진마다 인게임 감도 수치에 곱해지는 고유 배율(Yaw 값)이 완전히 다릅니다.</strong></p>
-        <p>특히 <strong>마인크래프트(Minecraft)</strong> 같은 게임은 감도 슬라이더가 직선으로 연산되지 않고 3제곱 곡선을 그리는 특이한 비선형 공식을 사용하기 때문에, 일반적인 일차 곱셈 연산으로는 절대 정확한 변환 값을 구할 수 없습니다.</p>
-        <p>예를 들어, 똑같이 DPI 800에 감도 1.0(마크는 100%)을 입력하면 단순 연산 수치는 비슷해 보일지 몰라도 실제 마우스 패드 위에서 캐릭터를 한 바퀴(360도) 돌려보면 다음과 같은 엄청난 차이가 발생합니다.</p>
-        <ul>
-            <li><strong>발로란트 (eDPI 800):</strong> 한 바퀴 도는 데 약 <strong>16.5cm</strong> 필요 (매우 빠름)</li>
-            <li><strong>카운터 스트라이크 2 (eDPI 800):</strong> 한 바퀴 도는 데 약 <strong>52.0cm</strong> 필요 (매우 느림)</li>
-            <li><strong>마인크래프트 (감도 100%):</strong> 한 바퀴 도는 데 약 <strong>7.6cm</strong> 필요 (초고속 회전)</li>
-        </ul>
-        <p>즉, 게임이 다르면 eDPI 숫자를 똑같이 맞추는 것은 아무런 의미가 없습니다. 서로 다른 게임 간에 완벽히 동일한 '손맛(근육 기억)'을 유지하고 싶다면, 본 사이트 상단의 <strong>[마우스 감도 변환]</strong> 기능을 이용해 실제 360도 회전 거리를 동기화해 주어야 합니다.</p>
-
-        <h3>🔒 개인정보처리방침 (Privacy Policy)</h3>
-        <p>AimBridgetool은 이용자가 입력한 어떠한 감도 데이터나 하드웨어 정보도 서버에 수집 및 저장하지 않습니다. 모든 계산은 브라우저 스크립트를 통해 사용자 PC 내부에서 독립적으로 수행됩니다. 본 웹사이트는 구글 애드센스 광고 게재를 위한 식별 쿠키를 사용할 수 있습니다.</p>
-    </div>
-
-    <footer>
-        <p>© 2026 AimBridgetool. All Rights Reserved. 본 사이트는 게이머들을 위한 순수 유틸리티 정적 페이지입니다.</p>
-    </footer>
 </div>
 
 <script>
-    // 게임별 고유 인게임 Yaw 값 상수 정의 (선형 게임용)
-    const yawValues = {
-        valorant: 0.07,
-        cs2: 0.022,
-        apex: 0.022,
-        cod: 0.0066,       // 수정: 0.022 -> 0.0066 (Warzone/MW 기준)
-        overwatch: 0.0066,
-        pubg: 0.002222,    // 수정: 0.002211 -> 0.002222 (1/450)
-        gta5: 0.022,       // 수정: 0.0055 -> 0.022
-        cyberpunk: 0.0066  // 수정: 0.0022 -> 0.0066
+    document.addEventListener('mousemove', e => {
+        $('cb').style.left = `${e.clientX}px`; $('cb').style.top = `${e.clientY}px`;
+    });
+
+    const pop = el => { el.classList.remove('react'); void el.offsetWidth; el.classList.add('react'); };
+    const setT = (id, v) => { const el=$(id); if(el.innerText !== String(v)) { el.innerText = v; pop(el); } };
+
+    document.querySelectorAll('select, input').forEach(el => {
+        el.addEventListener('mousedown', () => pop(el));
+        el.addEventListener('input', () => pop(el));
+    });
+
+    const Y = {valorant:.07, cs2:.022, apex:.022, cod:.0066, overwatch:.0066, pubg:.002222, minecraft:'mc'};
+    const gameNames = {valorant:'발로란트', cs2:'CS2', minecraft:'마인크래프트', pubg:'배틀그라운드', overwatch:'오버워치 2', apex:'에이펙스 레전드', cod:'콜 오브 듀티'};
+    
+    const getY = (g, s) => g === 'minecraft' ? Math.pow(s/200 * .6 + .2, 3) * 1.2 : s * (Y[g] || 0);
+    const $ = id => document.getElementById(id);
+
+    const stepVal = amount => {
+        const input = $('f-sens');
+        const isM = $('f-game').value === 'minecraft';
+        let step = isM ? 1 : 0.1;
+        let val = (parseFloat(input.value) || 0) + (amount * (isM ? 1 : step));
+        input.value = isM ? Math.max(1, Math.round(val)) : Math.max(0.01, val).toFixed(2);
+        cAll();
+        pop(input);
     };
 
-    // Yaw 값 계산 통합 함수 (중복 코드 제거 및 유지보수성 향상)
-    function getYaw(game, sens) {
-        if (game === 'minecraft') {
-            const mouseSens = sens / 200;
-            const f = mouseSens * 0.6 + 0.2;
-            return f * f * f * 1.2;
-        }
-        return sens * (yawValues[game] || 0);
-    }
-
-    // 마인크래프트 등 특수 게임 입력을 위한 라벨 및 기본값 편의성 제어
-    function updateGameMode(type) {
-        if (type === 'from') {
-            const game = document.getElementById('from-game').value;
-            const label = document.getElementById('from-sens-label');
-            const input = document.getElementById('from-sens');
-            
-            if (game === 'minecraft') {
-                label.innerText = "기존 인게임 감도 (%)";
-                if (parseFloat(input.value) <= 0) input.value = "100"; // 수정: < 10 -> <= 0
+    const upd = t => {
+        const p = t==='f'?'f':(t==='t'?'t':'c'), g = $(`${p}-game`).value, isM = g==='minecraft';
+        const input = $(`${p}-sens`);
+        if(t==='f' || t==='c') {
+            $(`${p}-lbl`).innerText = t==='f'?'기존 감도':'해당 감도';
+            input.step = isM ? '1' : '0.01';
+            let v = parseFloat(input.value);
+            if(isM) {
+                input.value = Math.max(1, Math.round(v || 100));
             } else {
-                label.innerText = "기존 인게임 감도";
-                if (parseFloat(input.value) < 0) input.value = "1.0";
-            }
-        } else if (type === 'calc') {
-            const game = document.getElementById('calc-game').value;
-            const label = document.getElementById('calc-sens-label');
-            const edpiLabel = document.getElementById('edpi-label');
-            const input = document.getElementById('calc-sens');
-            
-            if (game === 'minecraft') {
-                label.innerText = "해당 게임 인게임 감도 (%)";
-                edpiLabel.innerText = "단순 연산 eDPI 수치 (마크는 미지원)";
-                if (parseFloat(input.value) <= 0) input.value = "100"; // 수정: < 10 -> <= 0
-            } else {
-                label.innerText = "해당 게임 인게임 감도";
-                edpiLabel.innerText = "단순 연산 eDPI 수치";
-                if (parseFloat(input.value) < 0) input.value = "1.0";
+                if(v <= 0 || isNaN(v)) input.value = "1.0";
             }
         }
-        convertSensitivity();
-        calculateMetrics();
-    }
+        if(t==='c') $('e-lbl').innerText = isM ? 'eDPI (마크 미지원)' : 'eDPI';
+        cAll();
+    };
 
-    // 감도 변환 로직
-    function convertSensitivity() {
-        const fromGame = document.getElementById('from-game').value;
-        const toGame = document.getElementById('to-game').value;
-        // 수정: 음수 입력 방지 및 NaN 처리
-        const fromSens = Math.max(0, parseFloat(document.getElementById('from-sens').value) || 0); 
-        
-        if (fromSens <= 0) {
-            document.getElementById('calc-result').innerText = '0.000';
-            return;
+    const cAll = () => {
+        const fg=$('f-game').value, tg=$('t-game').value, fs=Math.max(0,parseFloat($('f-sens').value)||0);
+        const targetYaw = getY(fg, fs);
+
+        let resVal = '-';
+        if(fs > 0) {
+            if(tg === 'minecraft') {
+                const cbrtVal = Math.cbrt(targetYaw / 1.2);
+                let toSens = 200 * ((cbrtVal - 0.2) / 0.6);
+                resVal = Math.max(0, Math.round(toSens)) + '%';
+            } else {
+                resVal = (targetYaw / (Y[tg] || 0.022)).toFixed(3);
+            }
         }
+        setT('c-res', fs<=0 ? '0.000' : resVal);
 
-        // 1단계: 기준 게임으로부터 targetYaw(도/카운트) 계산
-        const targetYaw = getYaw(fromGame, fromSens);
+        const cg=$('c-game').value, cd=Math.max(0,parseFloat($('c-dpi').value)||0), cs=Math.max(0,parseFloat($('c-sens').value)||0);
+        setT('e-res', cg==='minecraft' ? 'N/A' : (cs>0&&cd>0 ? (cd*cs).toFixed(1) : '0'));
+        setT('d-res', (cd<=0||cs<=0) ? '0.0 cm' : ((360/(cd*getY(cg,cs)))*2.54).toFixed(1)+' cm');
 
-        // 2단계: 대상 게임에 맞게 역산하여 최종 결과 감도 도출
-        let toSens;
-        if (toGame === 'minecraft') {
-            const cbrtVal = Math.cbrt(targetYaw / 1.2);
-            toSens = 200 * ((cbrtVal - 0.2) / 0.6);
-            if (toSens < 0) toSens = 0;
-            
-            document.getElementById('calc-result').innerText = toSens.toFixed(1) + '%';
-        } else {
-            toSens = targetYaw / (yawValues[toGame] || 0.022);
-            document.getElementById('calc-result').innerText = toSens.toFixed(3);
+        let html = '';
+        const defaultDpi = 800;
+        for(let key in gameNames) {
+            let sensStr = '-';
+            let distStr = '-';
+            if(fs > 0) {
+                if(key === 'minecraft') {
+                    const cb = Math.cbrt(targetYaw / 1.2);
+                    let ts = 200 * ((cb - 0.2) / 0.6);
+                    sensStr = Math.max(0, Math.round(ts)) + '%';
+                } else {
+                    sensStr = (targetYaw / Y[key]).toFixed(3);
+                }
+                const dist = (360 / (defaultDpi * getY(key, parseFloat(sensStr)))) * 2.54;
+                distStr = dist.toFixed(1) + ' cm';
+            }
+            html += `<tr><td>${gameNames[key]}</td><td>${sensStr}</td><td>${distStr}</td></tr>`;
         }
-    }
+        $('compareBody').innerHTML = html;
+    };
 
-    // eDPI 및 360도 회전 물리 거리 계산 로직
-    function calculateMetrics() {
-        const game = document.getElementById('calc-game').value;
-        // 수정: 음수 입력 방지
-        const dpi = Math.max(0, parseFloat(document.getElementById('calc-dpi').value) || 0);
-        const sens = Math.max(0, parseFloat(document.getElementById('calc-sens').value) || 0);
-        const edpiResultEl = document.getElementById('edpi-result');
+    const copy = () => {
+        const b = document.querySelector('.btn'), t = $('c-res').innerText;
+        navigator.clipboard?.writeText(t).then(()=>fb(b)).catch(()=>{
+            const x=document.createElement('textarea'); x.value=t; document.body.appendChild(x); x.select();
+            try{document.execCommand('copy'); fb(b);}catch(e){} x.remove();
+        });
+    };
+    const fb = b => { const o=b.innerText; b.innerText='복사됨!'; pop($('c-res')); setTimeout(()=>b.innerText=o, 1000); };
 
-        // 마인크래프트는 eDPI 계산이 무의미하므로 예외 처리
-        if (game === 'minecraft') {
-            edpiResultEl.innerText = '미지원(N/A)';
-            edpiResultEl.style.fontSize = '1.4rem';
-        } else {
-            const edpi = dpi * sens;
-            // 수정: Math.round 대신 소수점 첫째 자리까지 표시하여 정밀도 향상
-            edpiResultEl.innerText = sens > 0 && dpi > 0 ? edpi.toFixed(1) : '0'; 
-            edpiResultEl.style.fontSize = '1.8rem';
-        }
-
-        if (dpi <= 0 || sens <= 0) {
-            document.getElementById('distance-result').innerText = '0.0 cm';
-            return;
-        }
-
-        // 전체 누적 Yaw 값 산출
-        const totalYaw = getYaw(game, sens);
-
-        // 360도 회전 거리(cm) 공식 = (360 / (DPI * 누적Yaw)) * 2.54
-        const distanceInCm = (360 / (dpi * totalYaw)) * 2.54;
-
-        document.getElementById('distance-result').innerText = distanceInCm.toFixed(1) + ' cm';
-    }
-
-    // 결과값 클립보드 복사 함수
-    function copyResult() {
-        const resultText = document.getElementById('calc-result').innerText;
-        const btn = document.querySelector('.btn-copy');
-        
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(resultText).then(() => {
-                showCopyFeedback(btn);
-            }).catch(() => {
-                fallbackCopy(resultText, btn);
-            });
-        } else {
-            fallbackCopy(resultText, btn);
-        }
-    }
-
-    function fallbackCopy(text, btn) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-            document.execCommand('copy');
-            showCopyFeedback(btn);
-        } catch (err) {
-            alert('클립보드 복사에 실패했습니다.');
-        }
-        document.body.removeChild(textarea);
-    }
-
-    // 수정: alert 대신 버튼 텍스트 변경으로 UX 개선
-    function showCopyFeedback(btn) {
-        const originalText = btn.innerText;
-        btn.innerText = '복사됨!';
-        btn.style.opacity = '0.7';
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.opacity = '1';
-        }, 1500);
-    }
-
-    // 수정: window.onload 대신 DOMContentLoaded 사용 (더 빠르고 안전함)
-    document.addEventListener('DOMContentLoaded', function() {
-        convertSensitivity();
-        calculateMetrics();
-    });
+    document.addEventListener('DOMContentLoaded', cAll);
 </script>
 </body>
 </html>
